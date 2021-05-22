@@ -12,28 +12,23 @@ import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 public class Robot extends TimedRobot {
 
-  private Joystick leftJoystick;  // Left joystick object
-  private Joystick rightJoystick; // Right joystick object
+  private JoystickController joystickController; // Contains joystick objects and joystick values
 
   private TalonSRX leftDrive;   // Talon object
   private TalonSRX rightDrive;  // Talon object
   private VictorSPX leftSlave;  // Talon object
   private VictorSPX rightSlave; // Talon object
 
-  public static final int rightTalonId = 2; // Talon ID
-  public static final int leftTalonId =  0;  // Talon ID
-  public static final int leftSlaveId =  1;  // Talon ID
-  public static final int rightSlaveId = 3;  // Talon ID
-
-  private double[] rightJoystickVec = new double[2];
-  private double[] leftJoystickVec = new double[2];
+  public static final int rightMasterId = 0; // Talon ID
+  public static final int rightSlaveId = 1;  // Talon ID
+  public static final int leftMasterId =  2;  // Talon ID
+  public static final int leftSlaveId =  3;  // Talon ID
 
   public Robot() {
-    leftJoystick = new Joystick(0);
-    rightJoystick = new Joystick(1);
+    joystickController = new JoystickController(0, 1);
 
-    leftDrive = new TalonSRX(leftTalonId);
-    rightDrive = new TalonSRX(rightTalonId);
+    leftDrive = new TalonSRX(leftMasterId);
+    rightDrive = new TalonSRX(rightMasterId);
     leftSlave = new VictorSPX(leftSlaveId);
     rightSlave = new VictorSPX(rightSlaveId);
 
@@ -65,16 +60,16 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    updateJoysticks();
+    joystickController.update();
 
-    rightDrive.set(ControlMode.Velocity, rightJoystickVec[1]);
-    leftDrive.set(ControlMode.Velocity, leftJoystickVec[1]);
+    rightDrive.set(ControlMode.PercentOutput, joystickController.getRightY());
+    leftDrive.set(ControlMode.PercentOutput, joystickController.getLeftY());
   }
 
   @Override
   public void disabledInit() {
-    rightDrive.set(ControlMode.Velocity, 0.0);
-    leftDrive.set(ControlMode.Velocity, 0.0);
+    rightDrive.set(ControlMode.PercentOutput, 0.0);
+    leftDrive.set(ControlMode.PercentOutput, 0.0);
   }
 
   @Override
@@ -86,19 +81,40 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {}
 
-  public void updateJoysticks() {
-    leftJoystickVec[0] = leftJoystick.getX();
-    leftJoystickVec[1] = leftJoystick.getY();
+  public static class JoystickController {
+    private Joystick leftJoystick;
+    private Joystick rightJoystick;
 
-    rightJoystickVec[0] = rightJoystick.getX();
-    rightJoystickVec[1] = rightJoystick.getY();
-  }
+    private double[] leftVec = new double[2];
+    private double[] rightVec = new double[2];
 
-  public double[] getLeftJoystick() {
-    return leftJoystickVec;
-  }
+    public JoystickController(int leftId, int rightId) {
+      leftJoystick = new Joystick(leftId);
+      rightJoystick = new Joystick(rightId);
+    }
 
-  public double[] getRightJoystick() {
-    return rightJoystickVec;
+    public void update() {
+      leftVec[0] = leftJoystick.getX();
+      leftVec[1] = leftJoystick.getY();
+
+      rightVec[0] = rightJoystick.getX();
+      rightVec[1] = rightJoystick.getY();
+    }
+
+    public double getLeftX() {
+      return leftVec[0];
+    }
+
+    public double getLeftY() {
+      return leftVec[1];
+    }
+
+    public double getRightX() {
+      return rightVec[0];
+    }
+
+    public double getRightY() {
+      return rightVec[1];
+    }
   }
 }
